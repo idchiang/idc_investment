@@ -26,9 +26,9 @@ def read_data(diffs=[]):
     return df
 
 
-def make_images(diffs=[], doPlotDelta=True, doPlotTime=True, doPlotIV=True):
+def make_images(initial_price=195.0, diffs=[], doPlotDelta=True, doPlotTime=True, doPlotIV=True):
     df = read_data(diffs=diffs)
-    no_insurance = [100.0 * diff / 195 for diff in diffs]
+    no_insurance = [100.0 * diff / initial_price for diff in diffs]
     cmap = mpl.cm.jet
     colors = cmap(np.linspace(0, 1, 1000))
     #
@@ -39,11 +39,11 @@ def make_images(diffs=[], doPlotDelta=True, doPlotTime=True, doPlotIV=True):
             mask = df['Delta_round'] == fixedDelta
             for ind in df[mask].index:
                 dfi = df.iloc[ind]
-                raw = 195.0 + dfi['Price']
+                raw = initial_price + dfi['Price']
                 prices_30d = [np.nan] * len(diffs)
                 for i, diff in enumerate(diffs):
                     prices_30d[i] = \
-                        100.0 * (max(195 + diff + dfi[diff], dfi['Strike']) -
+                        100.0 * (max(initial_price + diff + dfi[diff], dfi['Strike']) -
                                  raw) / raw
                 label = '$' + str(int(dfi['Strike'])) + ' Exp' + \
                     str(int(dfi['Expiration'])) + ' IV' + \
@@ -58,19 +58,20 @@ def make_images(diffs=[], doPlotDelta=True, doPlotTime=True, doPlotIV=True):
                 ax[p, q].set_xlabel('Change in underlying value ($)', size=18)
             ax[p, q].set_title('delta~' + str(round(fixedDelta, 1)), size=20)
         ax[-1, -1].axis('off')
-        fig.suptitle('Initial price=$195; Estimated for 30 days', size=24)
-        fig.savefig('byDelta.png')
+        fig.suptitle('Initial price=$' + str(initial_price) +
+                     '; Estimated for 30 days', size=24)
+        fig.savefig('examples/byDelta.png')
         #
         fig, ax = plt.subplots(figsize=(16, 12))
         norm = mpl.colors.Normalize(vmin=np.min(df['Delta']),
                                     vmax=np.max(df['Delta']))
         for ind in df.index:
             dfi = df.iloc[ind]
-            raw = 195.0 + dfi['Price']
+            raw = initial_price + dfi['Price']
             prices_30d = [np.nan] * len(diffs)
             for i, diff in enumerate(diffs):
                 prices_30d[i] = \
-                    100.0 * (max(195 + diff + dfi[diff], dfi['Strike']) -
+                    100.0 * (max(initial_price + diff + dfi[diff], dfi['Strike']) -
                              raw) / raw
             ax.plot(diffs, prices_30d,
                     color=colors[int(np.interp(dfi['Delta'],
@@ -83,8 +84,9 @@ def make_images(diffs=[], doPlotDelta=True, doPlotTime=True, doPlotIV=True):
                      label='delta')
         ax.set_ylabel('Change in total value (%)', size=18)
         ax.set_xlabel('Change in underlying value ($)', size=18)
-        fig.suptitle('Initial price=$195; Estimated for 30 days', size=24)
-        fig.savefig('byDeltaAIO.png')
+        fig.suptitle('Initial price=$' + str(initial_price) +
+                     '; Estimated for 30 days', size=24)
+        fig.savefig('examples/byDeltaAIO.png')
     #
     if doPlotTime:
         fig, ax = plt.subplots(figsize=(16, 12))
@@ -92,11 +94,11 @@ def make_images(diffs=[], doPlotDelta=True, doPlotTime=True, doPlotIV=True):
                                     vmax=np.max(df['Expiration']))
         for ind in df[df['Delta_round'] == -0.3].index:
             dfi = df.iloc[ind]
-            raw = 195.0 + dfi['Price']
+            raw = initial_price + dfi['Price']
             prices_30d = [np.nan] * len(diffs)
             for i, diff in enumerate(diffs):
                 prices_30d[i] = \
-                    100.0 * (max(195 + diff + dfi[diff], dfi['Strike']) -
+                    100.0 * (max(initial_price + diff + dfi[diff], dfi['Strike']) -
                              raw) / raw
             ax.plot(diffs, prices_30d,
                     color=colors[int(np.interp(dfi['Expiration'],
@@ -109,9 +111,10 @@ def make_images(diffs=[], doPlotDelta=True, doPlotTime=True, doPlotIV=True):
                      label='Expiration (+Month)')
         ax.set_ylabel('Change in total value (%)', size=18)
         ax.set_xlabel('Change in underlying value ($)', size=18)
-        title = 'Initial price=$195; Estimated for 30 days; Delta ~ -0.3'
+        title = 'Initial price=$' + str(initial_price) + \
+            '; Estimated for 30 days; Delta ~ -0.3'
         ax.set_title(title, size=24)
-        fig.savefig('byExpirationAIO.png')
+        fig.savefig('examples/byExpirationAIO.png')
     #
     if doPlotIV:
         fig, ax = plt.subplots(figsize=(16, 12))
@@ -128,12 +131,15 @@ def make_images(diffs=[], doPlotDelta=True, doPlotTime=True, doPlotIV=True):
                      label='Expiration (+Month)')
         ax.set_ylabel('IV', size=18)
         ax.set_xlabel('Delta', size=18)
-        fig.savefig('IV_to_delta.png')
+        fig.savefig('examples/IV_to_delta.png')
 
 
 if __name__ == '__main__':
+    # sorry, these two are currently hard-coded.
+    initial_price = 195.0
     diffs = np.arange(-40, 45, 5)
-    make_images(diffs=diffs,
+    make_images(initial_price=initial_price,
+                diffs=diffs,
                 doPlotDelta=False,
                 doPlotTime=True,
                 doPlotIV=True
